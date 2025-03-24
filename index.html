@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortnite Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        input {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: darkblue;
+        }
+        .error {
+            color: red;
+        }
+        .friend-list {
+            margin-top: 20px;
+        }
+        .friend-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .friend-item button {
+            width: auto;
+            background: green;
+            color: white;
+        }
+        .notification {
+            padding: 10px;
+            background-color: #ffcc00;
+            color: black;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .friends-note {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        #player-list {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Form -->
+    <div class="container" id="login-container">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="validateLogin()">Login</button>
+        <p id="error-message" class="error"></p>
+    </div>
+
+    <!-- User Dashboard -->
+    <div class="container" id="dashboard" style="display: none;">
+        <h2 id="dashboard-title">Welcome</h2>
+        <p id="dashboard-content"></p>
+
+        <!-- Notification Message -->
+        <div id="notification" class="notification"></div>
+
+        <!-- Search Bar for Players -->
+        <input type="text" id="search-bar" placeholder="Search for players" oninput="searchPlayers()">
+        
+        <!-- List of Players to Add -->
+        <div id="player-list"></div>
+
+        <!-- Friend List -->
+        <div class="friend-list" id="friend-list">
+            <h3>Your Friends</h3>
+            <div id="friends-items"></div>
+            <p class="friends-note">Please note: It might take about a week for the bot to add people as a friend.</p>
+        </div>
+
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        // Initialize EmailJS with your user ID
+        (function() {
+            emailjs.init('CJXoROx3IOLuDa_XO'); // Your EmailJS User ID
+        })();
+
+        // User database (username-password pairs and their respective dashboards)
+        const users = {
+            "xR7VjP82": { password: "L8#bGx@P2", content: "Welcome, xR7VjP82! Here are your activities." },
+            "Jm92kTs1": { password: "A4!vNc3Zp", content: "Welcome, Jm92kTs1! Here are your activities." },
+            "Hf58pLm3": { password: "D6!uHsLzV", content: "Welcome, Hf58pLm3! Here are your activities." },
+            "DqL4sX5Z": { password: "Q7#vKbR8", content: "Welcome, DqL4sX5Z! Here are your activities." },
+            "Qw8FgMv2": { password: "I2$hKmB9", content: "Welcome, Qw8FgMv2! Here are your activities." },
+            "bailey": { password: "bailey", content: "Hi Emma! Here are your recent activities and stats." }
+        };
+
+        // Current logged-in user
+        let loggedInUser = "";
+
+        // Check if user is already logged in
+        window.onload = function () {
+            const storedUser = localStorage.getItem("loggedInUser");
+            if (storedUser && users[storedUser]) {
+                loggedInUser = storedUser;
+                loadFriends();
+                showDashboard(loggedInUser);
+            }
+        };
+
+        function validateLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const errorMessage = document.getElementById("error-message");
+
+            if (users[username] && users[username].password === password) {
+                localStorage.setItem("loggedInUser", username);
+                loggedInUser = username;
+
+                // Ensure friends are loaded from localStorage if they exist
+                loadFriends();
+                showDashboard(username);
+            } else {
+                errorMessage.textContent = "Invalid username or password";
+            }
+        }
+
+        function loadFriends() {
+            // Retrieve friends list from localStorage (if any)
+            const storedFriends = JSON.parse(localStorage.getItem(`friends_${loggedInUser}`)) || [];
+            console.log("Loaded friends for", loggedInUser, storedFriends); // Debugging log
+            displayFriendList(storedFriends);
+        }
+
+        function showDashboard(username) {
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+            document.getElementById("dashboard-title").textContent = `Welcome, ${username}`;
+            document.getElementById("dashboard-content").textContent = users[username].content;
+        }
+
+        function displayFriendList(friends) {
+            const friendListContainer = document.getElementById("friends-items");
+            friendListContainer.innerHTML = '';
+
+            if (friends.length === 0) {
+                friendListContainer.innerHTML = "<p>You have no friends added yet.</p>";
+            } else {
+                friends.forEach(friend => {
+                    const friendItem = document.createElement('div');
+                    friendItem.className = 'friend-item';
+                    friendItem.innerHTML = `<span>${friend}</span>`;
+                    friendListContainer.appendChild(friendItem);
+                });
+            }
+        }
+
+        function searchPlayers() {
+            const searchTerm = document.getElementById("search-bar").value.trim();
+            const playerListContainer = document.getElementById("player-list");
+            playerListContainer.innerHTML = '';
+
+            if (searchTerm) {
+                const playerItem = document.createElement('div');
+                playerItem.className = 'friend-item';
+                playerItem.innerHTML = 
+                    `<span>${searchTerm}</span>
+                    <button onclick="addFriend('${searchTerm}')">Add Friend</button>`;
+                playerListContainer.appendChild(playerItem);
+            } else {
+                playerListContainer.innerHTML = "<p>Please enter a name to search for a player.</p>";
+            }
+        }
+
+        function addFriend(player) {
+            // Show notification
+            showNotification(`Please note: It might take about a week for the bot to add ${player} as a friend.`);
+
+            // Retrieve current friends list from localStorage
+            const storedFriends = JSON.parse(localStorage.getItem(`friends_${loggedInUser}`)) || [];
+
+            // Add friend to the list if it's not already there
+            if (!storedFriends.includes(player)) {
+                storedFriends.push(player);
+                localStorage.setItem(`friends_${loggedInUser}`, JSON.stringify(storedFriends));
+                displayFriendList(storedFriends);
+                showNotification(`${player} has been added to your friends list.`);
+
+                // Send Email with both username and friend name
+                sendFriendAddedEmail(loggedInUser, player);
+            } else {
+                showNotification(`${player} is already in your friends list.`);
+            }
+        }
+
+        function sendFriendAddedEmail(username, friendName) {
+            const templateParams = {
+                username: username,
+                friend_name: friendName,
+                to_email: "baileyksmith2010@gmail.com",
+                date: new Date().toLocaleString()
+            };
+
+            emailjs.send('service_aozh0f7', 'template_k05fe5u', templateParams)
+                .then(function(response) {
+                    console.log('Email sent successfully!', response.status, response.text);
+                }, function(error) {
+                    console.log('Email failed to send:', error);
+                });
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById("notification");
+            notification.textContent = message;
+            notification.style.display = "block";
+
+            // Hide the notification after 5 seconds
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem("loggedInUser");
+            loggedInUser = "";
+            document.getElementById("dashboard").style.display = "none";
+            document.getElementById("login-container").style.display = "block";
+        }
+    </script>
+</body>
+</html>
