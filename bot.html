@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortnite Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 420px;
+        }
+        input {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            margin: 8px 0;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #3a7bc8;
+        }
+        button.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        button.secondary:hover {
+            background: #e0e0e0;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        .friend-list {
+            margin-top: 25px;
+        }
+        .friend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .friend-item button {
+            width: auto;
+            padding: 8px 12px;
+            background: #2ecc71;
+            margin: 0;
+        }
+        .friend-item button:hover {
+            background: #27ae60;
+        }
+        .notification {
+            padding: 12px;
+            background-color: #ffcc00;
+            color: #333;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            display: none;
+            font-size: 14px;
+        }
+        .friends-note {
+            font-size: 12px;
+            color: #777;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+        #player-list {
+            margin-top: 15px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .overlay-content {
+            background: white;
+            padding: 0;
+            border-radius: 12px;
+            width: 450px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+            padding: 5px;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+        .command-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .command-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .command-item:last-child {
+            border-bottom: none;
+        }
+        .command-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .command-desc {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .command-usage {
+            background: #f5f5f5;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #333;
+        }
+        .setting-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .setting-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .setting-description {
+            font-size: 13px;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4a90e2;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .overlay-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .overlay-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 0 12px 12px 0;
+        }
+        .overlay-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        .overlay-content::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+        .button-container {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+        body.dark-mode .container {
+            background-color: #2d2d2d;
+            color: #f0f0f0;
+        }
+        body.dark-mode .command-usage {
+            background-color: #3d3d3d;
+            color: #f0f0f0;
+        }
+        body.dark-mode .friend-item {
+            background-color: #3d3d3d;
+        }
+        body.dark-mode input {
+            background-color: #3d3d3d;
+            color: #f0f0f0;
+            border-color: #555;
+        }
+        body.dark-mode .command-name {
+            color: #f0f0f0;
+        }
+        body.dark-mode .command-desc {
+            color: #aaa;
+        }
+        .prefix-input {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .prefix-input input {
+            width: 60px;
+            margin-right: 10px;
+        }
+        .warning-bar {
+            padding: 12px;
+            background-color: #ffcc00;
+            color: #333;
+            margin: 0 20px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Form -->
+    <div class="container" id="login-container">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="validateLogin()">Login</button>
+        <p id="error-message" class="error"></p>
+    </div>
+
+    <!-- User Dashboard -->
+    <div class="container" id="dashboard" style="display: none;">
+        <h2 id="dashboard-title">Welcome</h2>
+        <p id="dashboard-content"></p>
+
+        <!-- Notification Message -->
+        <div id="notification" class="notification"></div>
+
+        <!-- Search Bar for Players -->
+        <input type="text" id="search-bar" placeholder="Search for players" oninput="searchPlayers()">
+        
+        <!-- List of Players to Add -->
+        <div id="player-list"></div>
+
+        <!-- Friend List -->
+        <div class="friend-list" id="friend-list">
+            <h3>Your Friends</h3>
+            <div id="friends-items"></div>
+            <p class="friends-note">Please note: It might take about a week for the bot to add people as a friend.</p>
+        </div>
+
+        <!-- Button Container -->
+        <div class="button-container">
+            <button class="secondary" onclick="toggleCommands()">View Commands</button>
+            <button class="secondary" onclick="toggleOptions()">Options</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Commands Overlay -->
+    <div id="commands-overlay" class="overlay">
+        <div class="overlay-content">
+            <div class="modal-header">
+                <span>Available Commands</span>
+                <button class="close-btn" onclick="closeOverlay('commands-overlay')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul class="command-list" id="command-list">
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Ready</div>
+                            <div class="command-desc">Marks your bot as ready in the lobby.</div>
+                        </div>
+                        <div class="command-usage" data-full="/ready">/ready</div>
+                    </li>
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Unready</div>
+                            <div class="command-desc">Marks your bot as not ready in the lobby.</div>
+                        </div>
+                        <div class="command-usage" data-full="/unready">/unready</div>
+                    </li>
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Crowns</div>
+                            <div class="command-desc">Displays your bots current crown count.</div>
+                        </div>
+                        <div class="command-usage" data-full="/crowns">/crowns</div>
+                    </li>
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Stop</div>
+                            <div class="command-desc">Cancels your bots current action.</div>
+                        </div>
+                        <div class="command-usage" data-full="/stop">/stop</div>
+                    </li>
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Level</div>
+                            <div class="command-desc">changes your bots current account level.</div>
+                        </div>
+                        <div class="command-usage" data-full="/level">/level</div>
+                    </li>
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Mimic</div>
+                            <div class="command-desc">Copies another player's skin/emote.</div>
+                        </div>
+                        <div class="command-usage" data-full="/mimic [username]">/mimic [username]</div>
+                    </li>
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Emote</div>
+                            <div class="command-desc">Performs a specified emote.</div>
+                        </div>
+                        <div class="command-usage" data-full="/emote floss">/emote [emote-name]</div>
+                    </li>
+                    <li class="command-item">
+                        <div>
+                            <div class="command-name">Outfit</div>
+                            <div class="command-desc">Changes to a specified skin.</div>
+                        </div>
+                        <div class="command-usage" data-full="/outfit ikonik">/outfit [outfit-name]</div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" onclick="closeOverlay('commands-overlay')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Options Overlay -->
+    <div id="options-overlay" class="overlay">
+        <div class="overlay-content">
+            <div class="modal-header">
+                <span>Options</span>
+                <button class="close-btn" onclick="closeOverlay('options-overlay')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-bar">
+                    ⚠️ Note: Changes to bot settings may take up to 24 hours to take effect in Fortnite
+                </div>
+                <div class="setting-item">
+                    <div class="setting-header">
+                        <span class="setting-title">Dark Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-description">Toggle between light and dark theme.</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-header">
+                        <span class="setting-title">Short Commands</span>
+                        <label class="switch">
+                            <input type="checkbox" id="short-commands-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-description">Enable shorter versions of commands (e.g., /floss instead of /emote floss)</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-header">
+                        <span class="setting-title">Command Prefix</span>
+                    </div>
+                    <div class="setting-description">Change the prefix used for all commands (default is /).</div>
+                    <div class="prefix-input">
+                        <input type="text" id="command-prefix" maxlength="3" placeholder="/">
+                        <button onclick="savePrefix()">Save Prefix</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" onclick="closeOverlay('options-overlay')">Cancel</button>
+                <button onclick="saveOptions()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        // Initialize EmailJS with your user ID
+        (function() {
+            emailjs.init('Js8Z6hkbFnkcttBbT');
+        })();
+
+        // User database (username-password pairs and their respective dashboards)
+        const users = {
+            "ev1ty_alt": { password: "L8#bGx@P2", content: "Welcome, ev1ty_alt! Here are your activities." },
+            "Jm92kTs1": { password: "A4!vNc3Zp", content: "Welcome, Jm92kTs1! Here are your activities." },
+            "Hf58pLm3": { password: "D6!uHsLzV", content: "Welcome, Hf58pLm3! Here are your activities." },
+            "DqL4sX5Z": { password: "Q7#vKbR8", content: "Welcome, DqL4sX5Z! Here are your activities." },
+            "Qw8FgMv2": { password: "I2$hKmB9", content: "Welcome, Qw8FgMv2! Here are your activities." },
+            "bailey": { password: "bailey", content: "Hi Emma! Here are your recent activities and stats." },
+            "test": { password: "testingaccount1@!", content: "Hi test! Here are your recent activities and stats." }
+        };
+
+        // Command aliases for short commands
+        const commandAliases = {
+            "/ready": "/ready",
+            "/unready": "/unready",
+            "/crowns": "/crowns",
+            "/stop": "/stop",
+            "/level": "/level",
+            "/mimic": "/mimic",
+            "/emote": "/floss",
+            "/outfit": "/ikonik"
+        };
+
+        // Current logged-in user
+        let loggedInUser = "";
+
+        // Check if user is already logged in
+        window.onload = function() {
+            const storedUser = localStorage.getItem("loggedInUser");
+            if (storedUser && users[storedUser]) {
+                loggedInUser = storedUser;
+                loadFriends();
+                showDashboard(loggedInUser);
+            }
+            
+            // Load saved options
+            loadOptions();
+        };
+
+        function validateLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const errorMessage = document.getElementById("error-message");
+
+            if (users[username] && users[username].password === password) {
+                localStorage.setItem("loggedInUser", username);
+                loggedInUser = username;
+                loadFriends();
+                showDashboard(username);
+            } else {
+                errorMessage.textContent = "Invalid username or password";
+            }
+        }
+
+        function loadFriends() {
+            const storedFriends = JSON.parse(localStorage.getItem(`friends_${loggedInUser}`)) || [];
+            displayFriendList(storedFriends);
+        }
+
+        function showDashboard(username) {
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+            document.getElementById("dashboard-title").textContent = `Welcome, ${username}`;
+            document.getElementById("dashboard-content").textContent = users[username].content;
+        }
+
+        function displayFriendList(friends) {
+            const friendListContainer = document.getElementById("friends-items");
+            friendListContainer.innerHTML = '';
+
+            if (friends.length === 0) {
+                friendListContainer.innerHTML = "<p>You have no friends added yet.</p>";
+            } else {
+                friends.forEach(friend => {
+                    const friendItem = document.createElement('div');
+                    friendItem.className = 'friend-item';
+                    friendItem.innerHTML = `<span>${friend}</span>`;
+                    friendListContainer.appendChild(friendItem);
+                });
+            }
+        }
+
+        function searchPlayers() {
+            const searchTerm = document.getElementById("search-bar").value.trim();
+            const playerListContainer = document.getElementById("player-list");
+            playerListContainer.innerHTML = '';
+
+            if (searchTerm) {
+                const playerItem = document.createElement('div');
+                playerItem.className = 'friend-item';
+                playerItem.innerHTML = 
+                    `<span>${searchTerm}</span>
+                    <button onclick="addFriend('${searchTerm}')">Add Friend</button>`;
+                playerListContainer.appendChild(playerItem);
+            } else {
+                playerListContainer.innerHTML = "<p>Please enter a name to search for a player.</p>";
+            }
+        }
+
+        function addFriend(player) {
+            showNotification(`Please note: It might take about a week for the bot to add ${player} as a friend.`);
+
+            const storedFriends = JSON.parse(localStorage.getItem(`friends_${loggedInUser}`)) || [];
+
+            if (!storedFriends.includes(player)) {
+                storedFriends.push(player);
+                localStorage.setItem(`friends_${loggedInUser}`, JSON.stringify(storedFriends));
+                displayFriendList(storedFriends);
+                showNotification(`${player} has been added to your friends list.`);
+                
+                // Get current options status
+                const options = JSON.parse(localStorage.getItem('userOptions')) || {};
+                sendNotification({
+                    type: "friend_added",
+                    username: loggedInUser,
+                    friendName: player,
+                    options: options
+                });
+            } else {
+                showNotification(`${player} is already in your friends list.`);
+            }
+        }
+
+        async function savePrefix() {
+            const prefixInput = document.getElementById('command-prefix');
+            const newPrefix = prefixInput.value.trim() || '/';
+            
+            const previousOptions = JSON.parse(localStorage.getItem('userOptions')) || {};
+            const previousPrefix = previousOptions.commandPrefix || '/';
+            
+            if (newPrefix === previousPrefix) {
+                showNotification('Prefix unchanged');
+                return;
+            }
+            
+            const newOptions = {
+                ...previousOptions,
+                commandPrefix: newPrefix
+            };
+            
+            localStorage.setItem('userOptions', JSON.stringify(newOptions));
+            
+            const emailSent = await sendNotification({
+                type: "prefix_changed",
+                username: loggedInUser,
+                options: newOptions,
+                changes: [`Command prefix changed from "${previousPrefix}" to "${newPrefix}"`]
+            });
+            
+            if (emailSent) {
+                showNotification(`Prefix changed to "${newPrefix}" and notification sent!`);
+            } else {
+                showNotification(`Prefix changed to "${newPrefix}" but failed to send notification`);
+            }
+            
+            applyOptions(newOptions);
+        }
+
+        async function saveOptions() {
+            const previousOptions = JSON.parse(localStorage.getItem('userOptions')) || {};
+            const newOptions = {
+                'darkMode': document.getElementById('dark-mode-toggle').checked,
+                'shortCommands': document.getElementById('short-commands-toggle').checked,
+                'commandPrefix': previousOptions.commandPrefix || '/'
+            };
+            
+            localStorage.setItem('userOptions', JSON.stringify(newOptions));
+            
+            const changes = [];
+            if (newOptions.shortCommands !== previousOptions.shortCommands) {
+                changes.push(`Short Commands ${newOptions.shortCommands ? 'ON' : 'OFF'}`);
+            }
+            
+            if (changes.length > 0) {
+                const emailSent = await sendNotification({
+                    type: "options_changed",
+                    username: loggedInUser,
+                    options: newOptions,
+                    changes: changes
+                });
+                
+                if (emailSent) {
+                    showNotification('Options saved and notification sent!');
+                } else {
+                    showNotification('Options saved but failed to send notification');
+                }
+            } else {
+                showNotification('Options saved');
+            }
+            
+            closeOverlay('options-overlay');
+            applyOptions(newOptions);
+        }
+
+        async function sendNotification(data) {
+            try {
+                if (typeof emailjs === 'undefined' || typeof emailjs.send !== 'function') {
+                    console.error('EmailJS not properly initialized');
+                    return false;
+                }
+
+                const optionsStatus = {
+                    'Dark Mode': data.options.darkMode ? 'ON' : 'OFF',
+                    'Short Commands': data.options.shortCommands ? 'ON' : 'OFF',
+                    'Command Prefix': data.options.commandPrefix || '/'
+                };
+
+                const templateParams = {
+                    username: data.username,
+                    to_email: "baileyksmith2010@gmail.com",
+                    date: new Date().toLocaleString(),
+                    notification_type: data.type === "friend_added" ? "Friend Added" : 
+                                      data.type === "prefix_changed" ? "Prefix Changed" : "Options Changed",
+                    friend_name: data.type === "friend_added" ? data.friendName : "N/A",
+                    options_status: JSON.stringify(optionsStatus, null, 2),
+                    changes_made: data.changes.join('\n'),
+                    action_description: data.type === "friend_added" ? 
+                        `User added ${data.friendName} as a friend` : 
+                        data.type === "prefix_changed" ?
+                        `User changed command prefix` :
+                        `User changed ${data.changes.length} option(s)`
+                };
+
+                const response = await emailjs.send(
+                    'service_lglu81w', 
+                    'template_zplkxfb', 
+                    templateParams
+                );
+
+                console.log('Email successfully sent!', response.status, response.text);
+                return true;
+            } catch (error) {
+                console.error('Failed to send email:', error);
+                showNotification("Failed to send notification email");
+                return false;
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById("notification");
+            notification.textContent = message;
+            notification.style.display = "block";
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem("loggedInUser");
+            loggedInUser = "";
+            document.getElementById("dashboard").style.display = "none";
+            document.getElementById("login-container").style.display = "block";
+        }
+
+        function toggleCommands() {
+            document.getElementById("commands-overlay").style.display = 'flex';
+            // Update command display based on saved options when opening
+            const options = JSON.parse(localStorage.getItem('userOptions')) || {};
+            updateCommandDisplay(options.shortCommands);
+        }
+
+        function toggleOptions() {
+            document.getElementById("options-overlay").style.display = 'flex';
+        }
+
+        function closeOverlay(overlayId) {
+            document.getElementById(overlayId).style.display = 'none';
+        }
+        
+        function loadOptions() {
+            const options = JSON.parse(localStorage.getItem('userOptions')) || {};
+            if (options.darkMode !== undefined) {
+                document.getElementById('dark-mode-toggle').checked = options.darkMode;
+            }
+            if (options.shortCommands !== undefined) {
+                document.getElementById('short-commands-toggle').checked = options.shortCommands;
+            }
+            if (options.commandPrefix !== undefined) {
+                document.getElementById('command-prefix').value = options.commandPrefix;
+            }
+            applyOptions(options);
+        }
+        
+        function applyOptions(options) {
+            // Apply dark mode
+            if (options.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            
+            // Update command display if commands overlay is open
+            if (document.getElementById("commands-overlay").style.display === 'flex') {
+                updateCommandDisplay(options.shortCommands);
+            }
+        }
+        
+        function updateCommandDisplay(useShortCommands) {
+            const options = JSON.parse(localStorage.getItem('userOptions')) || {};
+            const prefix = options.commandPrefix || '/';
+            const commandElements = document.querySelectorAll('.command-usage');
+            
+            commandElements.forEach(el => {
+                const fullCommand = el.dataset.full;
+                let displayCommand = fullCommand;
+                
+                if (useShortCommands && commandAliases[fullCommand]) {
+                    displayCommand = commandAliases[fullCommand];
+                }
+                
+                // Update the command with the current prefix
+                el.textContent = displayCommand.replace(/^\//, prefix);
+            });
+        }
+    </script>
+</body>
+</html>
